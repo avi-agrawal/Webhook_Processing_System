@@ -1,0 +1,34 @@
+{
+  "name": "webhook_processing_system",
+  "version": "1.0.0",
+  "description": "high-performance scalable webhook processing system",
+  "main": "src/server.ts",
+  "scripts": {
+    "start": "npx ts-node src/server.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/avi-agrawal/Webhook_Processing_System.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/avi-agrawal/Webhook_Processing_System/issues"
+  },
+  "homepage": "https://github.com/avi-agrawal/Webhook_Processing_System#readme",
+  "dependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.0",
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
+    "kafkajs": "^2.2.4",
+    "nodemon": "^3.1.10",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}
