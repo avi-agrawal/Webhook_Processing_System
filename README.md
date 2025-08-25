@@ -43,13 +43,16 @@ The system is built to be robust, ensuring data integrity and preventing lost ev
 * Docker and Docker Compose
 * A running Kafka broker instance
 
-#### Step 1: Install Dependencies
+#### Step 1: Clone the Repository and Install Dependencies
 Navigate to your project's root directory and install the required packages.
 ```bash
+git clone <repository_url>
+cd <project_directory>
 npm install
+```
 
 #### Step 2: Start the Kafka Cluster and Database
-Start the Kafka broker, ZooKeeper, and a simple UI using Docker Compose. A docker-compose.yml file is provided for this purpose.
+Start the Kafka broker, ZooKeeper, and a simple UI using Docker Compose. A `docker-compose.yml` file is provided for this purpose.
 ```bash
 docker-compose up -d
 ```
