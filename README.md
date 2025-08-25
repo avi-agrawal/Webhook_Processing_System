@@ -47,3 +47,66 @@ The system is built to be robust, ensuring data integrity and preventing lost ev
 Navigate to your project's root directory and install the required packages.
 ```bash
 npm install
+
+#### Step 2: Start the Kafka Cluster and Database
+Start the Kafka broker, ZooKeeper, and a simple UI using Docker Compose. A docker-compose.yml file is provided for this purpose.
+```bash
+docker-compose up -d
+
+This command will also set up an SQLite database, db.sqlite, which the application will use.
+
+#### Step 3: Start the Server and Worker
+Open two separate terminal windows.
+
+### Terminal 1 (Start the Worker):
+```bash
+npx ts-node src/worker.ts
+
+### Terminal 2 (Start the Server):
+```bash
+npx ts-node src/server.ts
+
+#### Step 4: Test the System
+Use curl to simulate webhook events.
+
+1. Create a test order (optional):
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{
+  "id": "order_12345",
+  "user_id": "user_abc",
+  "items": ["item1"],
+  "total_amount": 1000
+}' http://localhost:3000/api/orders
+
+
+2. Send a payment.success webhook:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{
+  "event_type": "payment.success",
+  "payment_id": "pay_xyz789",
+  "order_id": "order_12345",
+  "amount": 1000,
+  "currency": "USD"
+}' http://localhost:3000/api/webhooks/payment
+
+
+You'll get an immediate 200 OK from the server. The processing will be handled by the worker in the background, which will update the database.
+
+***
+
+#### Performance Analysis: Bottlenecks and Scaling Approaches
+
+**Potential Bottlenecks
+
+* Database Contention: The SQLite database can be a bottleneck. For a high-concurrency production environment, a database like PostgreSQL or CockroachDB would be better suited to handle parallel transactions.
+
+* Worker Throughput: A single worker process might not be able to keep up with the rate of incoming messages, causing the Kafka topic to back up.
+
+** Scaling Approaches
+
+* Database Scaling: To handle higher loads, the SQLite database should be replaced with a scalable, high-concurrency database like PostgreSQL or a distributed database.
+
+* Worker Scaling: The worker processes can be scaled horizontally. By running multiple instances of worker.ts as part of the same consumer group, the workload is automatically distributed by Kafka, increasing the system's processing capacity.
+
+* Topic Partitioning: For extremely high-volume scenarios, the Kafka topic can be partitioned to allow for even greater parallelism.
