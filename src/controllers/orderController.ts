@@ -1,7 +1,7 @@
 //imports
 import {Database} from 'sqlite';
 import { Request, Response } from 'express';
-import { createOrder } from '../dao/orderModels';
+import { createOrder, getOrder } from '../dao/orderModels';
 
 /**
  * Function to create a new order
@@ -20,6 +20,9 @@ export const createOrderController = (db : Database) => async(req : Request, res
             console.log("Error: Missing required fields in the request body.");
             return;
         }
+
+        //check order id already exist or not
+        await getOrder(db, order);
 
         //if no issue, create the order
         await createOrder(db, order);

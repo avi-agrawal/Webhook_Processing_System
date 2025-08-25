@@ -18,7 +18,7 @@ export async function processPaymentWebhook(db: Database, payment: any) {
         const order = await db.get(`SELECT * FROM orders WHERE id = ?`, [payment.order_id]);
         if (!order) {
             console.error("Order not found:", payment.order_id);
-            return;
+            return "ORDER_NOT_FOUND";
         }
 
         await db.run('BEGIN TRANSACTION;');
