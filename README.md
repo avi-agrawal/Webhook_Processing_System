@@ -52,6 +52,7 @@ npm install
 Start the Kafka broker, ZooKeeper, and a simple UI using Docker Compose. A docker-compose.yml file is provided for this purpose.
 ```bash
 docker-compose up -d
+```
 
 This command will also set up an SQLite database, db.sqlite, which the application will use.
 
@@ -61,10 +62,12 @@ Open two separate terminal windows.
 ### Terminal 1 (Start the Worker):
 ```bash
 npx ts-node src/worker.ts
+```
 
 ### Terminal 2 (Start the Server):
 ```bash
 npx ts-node src/server.ts
+```
 
 #### Step 4: Test the System
 Use curl to simulate webhook events.
@@ -77,7 +80,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
   "items": ["item1"],
   "total_amount": 1000
 }' http://localhost:3000/api/orders
-
+```
 
 2. Send a payment.success webhook:
 
@@ -89,9 +92,10 @@ curl -X POST -H "Content-Type: application/json" -d '{
   "amount": 1000,
   "currency": "USD"
 }' http://localhost:3000/api/webhooks/payment
-
+```
 
 You'll get an immediate 200 OK from the server. The processing will be handled by the worker in the background, which will update the database.
+
 
 ***
 
