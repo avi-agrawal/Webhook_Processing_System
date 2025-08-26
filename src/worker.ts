@@ -37,6 +37,12 @@ async function startWorker() {
                             processed = true;
                             console.log(`Job processed successfully for payment_id: ${payment.payment_id}`);
                         }
+                        else if(result=== 'ORDER_NOT_FOUND'){
+                            processed = true;
+                            //no use of retrying if order not found
+                            console.error(`Order not found for payment_id: ${payment.payment_id}`);
+                            break;
+                        }
                     }
                     catch(err){
                         retryCount++;

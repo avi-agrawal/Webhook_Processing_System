@@ -17,7 +17,7 @@ export async function processPaymentWebhook(db: Database, payment: any) {
         //check order id already exist or not
         const order = await db.get(`SELECT * FROM orders WHERE id = ?`, [payment.order_id]);
         if (!order) {
-            console.error("Order not found:", payment.order_id);
+            console.error("Order not found for order_id:", payment.order_id);
             return "ORDER_NOT_FOUND";
         }
 
