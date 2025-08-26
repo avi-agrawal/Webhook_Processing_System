@@ -1,6 +1,5 @@
 import { setupDatabase } from './models/database';
 import { processPaymentWebhook } from './dao/paymentModel';
-// import { dequeue, onNewJob } from './queue';
 import {consumer} from "./utils/kafka"
 import { resolve } from 'path';
 

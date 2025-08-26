@@ -13,9 +13,6 @@ app.use(bodyParser.json());
 //constants
 const PORT = 8080;
 
-// controllers
-import { createOrderController } from "./controllers/orderController"
-
 
 // routes
 app.get("/", (req, res) => {

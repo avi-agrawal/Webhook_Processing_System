@@ -20,7 +20,7 @@ The core architectural decision was to adopt a **decoupled, asynchronous system*
 
 The primary optimization for throughput is the **decoupling of webhook reception from processing**.
 
-* **Low-Latency Acknowledgment**: The Express server's sole responsibility is to receive the webhook payload and immediately publish it to a Kafka topic. This is a very fast, non-blocking I/O operation. The server can respond with a `200 OK` almost instantly, minimizing latency for the client and allowing it to handle a high volume of concurrent requests.
+* **Low-Latency Acknowledgment**: The Express server's sole responsibility is to receive the webhook payload and immediately publish it to a Kafka topic. This is a very fast, non-blocking I/O operation. The server can respond with a `200 OK` instantly, minimizing latency for the client and allowing it to handle a high volume of concurrent requests.
 * **Asynchronous Processing**: The intensive database updates are handled by the worker process, which consumes messages from Kafka at its own pace. This prevents a slow database from becoming a bottleneck that would otherwise block the main server and lead to request timeouts.
 
 ***
@@ -42,78 +42,110 @@ The system is built to be robust, ensuring data integrity and preventing lost ev
 * Node.js (v18 or higher)
 * Docker and Docker Compose
 * A running Kafka broker instance
+* sqlite3 command-line tool (for direct database inspection)
 
 #### Step 1: Clone the Repository and Install Dependencies
 Navigate to your project's root directory and install the required packages.
 ```bash
 git clone <repository_url>
 cd <project_directory>
+
 npm install
 ```
 
 #### Step 2: Start the Kafka Cluster and Database
-Start the Kafka broker, ZooKeeper, and a simple UI using Docker Compose. A `docker-compose.yml` file is provided for this purpose.
+Start the Kafka broker, ZooKeeper, and a simple UI (KafkaDrop) using Docker Compose. A `docker-compose.yml` file is provided for this purpose.
 ```bash
 docker-compose up -d
 ```
 
-This command will also set up an SQLite database, db.sqlite, which the application will use.
+You can monitor the Kafka cluster's status by navigating to the Kafdrop web UI at :
+`http://localhost:9000`
+
 
 #### Step 3: Start the Server and Worker
-Open two separate terminal windows.
+Open two separate terminal windows. When you run the server for the first time, the `db.sqlite` database file will be created.
 
-### Terminal 1 (Start the Worker):
+##### Terminal 1 (Start the Worker):
 ```bash
-npx ts-node src/worker.ts
+npm run start
 ```
 
-### Terminal 2 (Start the Server):
+##### Terminal 2 (Start the Server):
 ```bash
-npx ts-node src/server.ts
+npm run worker
 ```
 
 #### Step 4: Test the System
-Use curl to simulate webhook events.
+Use `curl` to simulate webhook events.
 
-1. Create a test order (optional):
+1. Create a test order:
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{
-  "id": "order_12345",
-  "user_id": "user_abc",
-  "items": ["item1"],
-  "total_amount": 1000
-}' http://localhost:3000/api/orders
+curl --location 'localhost:8080/api/orders/v1' \
+--header 'Content-Type: application/json' \
+--data '{
+    "id": "1234",
+    "user_id": "avi_123",
+    "items": ["pen"],
+    "total_amount": 500
+}'
 ```
 
-2. Send a payment.success webhook:
+2. Send a `payment.success` webhook:
 
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{
+curl --location 'http://localhost:8080/api/webhooks/payment/v1' \
+--header 'Content-Type: application/json' \
+--data '{
   "event_type": "payment.success",
-  "payment_id": "pay_xyz789",
-  "order_id": "order_12345",
-  "amount": 1000,
-  "currency": "USD"
-}' http://localhost:3000/api/webhooks/payment
+  "payment_id": "pay_1234",
+  "order_id": "1234",
+  "amount": 500,
+  "currency": "INR",
+  "user_id": "avi_123",
+  "timestamp": "2025-08-25T11:00:00Z"
+}'
 ```
 
-You'll get an immediate 200 OK from the server. The processing will be handled by the worker in the background, which will update the database.
+You'll get an immediate `200 OK` from the server. The processing will be handled by the worker in the background, which will update the database.
 
+
+#### Step 5: Inspect the Database
+If you have the sqlite3 command-line tool installed, you can inspect the database directly to confirm the records were updated.
+
+```bash
+
+# Start sqlite3 db CLI
+sqlite3
+
+# Open the database db.sqlite file
+.open db.sqlite
+
+# Check tables
+.tables
+
+# Run SQL queries
+SELECT * FROM orders;
+SELECT * FROM payments;
+
+# Exit the sqlite3 prompt
+.exit
+```
 
 ***
 
-#### Performance Analysis: Bottlenecks and Scaling Approaches
+### Performance Analysis: Bottlenecks and Scaling Approaches
 
-**Potential Bottlenecks
+#### Potential Bottlenecks
 
-* Database Contention: The SQLite database can be a bottleneck. For a high-concurrency production environment, a database like PostgreSQL or CockroachDB would be better suited to handle parallel transactions.
+* **Database Contention**: The SQLite database can be a bottleneck. For a high-concurrency production environment, a database like PostgreSQL would be better suited to handle parallel transactions.
 
-* Worker Throughput: A single worker process might not be able to keep up with the rate of incoming messages, causing the Kafka topic to back up.
+* **Worker Throughput**: A single worker process might not be able to keep up with the rate of incoming messages, causing the Kafka topic to back up.
 
-** Scaling Approaches
+#### Scaling Approaches
 
-* Database Scaling: To handle higher loads, the SQLite database should be replaced with a scalable, high-concurrency database like PostgreSQL or a distributed database.
+* **Database Scaling**: To handle higher loads, the SQLite database should be replaced with a scalable, high-concurrency database like PostgreSQL or a distributed database.
 
-* Worker Scaling: The worker processes can be scaled horizontally. By running multiple instances of worker.ts as part of the same consumer group, the workload is automatically distributed by Kafka, increasing the system's processing capacity.
+* **Worker Scaling**: The worker processes can be scaled horizontally. By running multiple instances of `worker.ts` as part of the same consumer group, the workload is automatically distributed by Kafka, increasing the system's processing capacity.
 
-* Topic Partitioning: For extremely high-volume scenarios, the Kafka topic can be partitioned to allow for even greater parallelism.
+* **Topic Partitioning**: For extremely high-volume scenarios, the Kafka topic can be partitioned to allow for even greater parallelism.

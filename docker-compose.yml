@@ -23,7 +23,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
-  kafdrop: # optional Kafka web UI
+  kafdrop: # Kafka web UI
     image: obsidiandynamics/kafdrop
     ports:
       - "9000:9000"
